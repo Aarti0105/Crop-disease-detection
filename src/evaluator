@@ -1,0 +1,315 @@
+# =============================================================================
+# evaluator.py  —  Model Evaluation Pipeline
+# =============================================================================
+#
+# PURPOSE:
+#   Measures model performance and saves all results, charts, and comparisons.
+#
+# KEY DIFFERENCE FROM KERAS:
+#   Keras:   predictions = model.predict(X_test)  — one line
+#   PyTorch: you loop through the test DataLoader manually,
+#            run model(batch) inside torch.no_grad(),
+#            collect predictions, move them back to CPU, convert to numpy.
+#
+# METRICS (from literature proposed approach):
+#   Accuracy, Precision, Recall, F1-score
+#   Robustness Gap   = baseline_clean - baseline_droplet  (the drop)
+#   Augmentation Gap = augmented_droplet - baseline_droplet (the recovery)
+# =============================================================================
+
+import os
+import json
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+import torch
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+
+
+# =============================================================================
+# FUNCTION: get_predictions
+# =============================================================================
+def get_predictions(model, loader, device):
+    """
+    Run the model on a DataLoader and return predicted class indices as numpy.
+
+    WHY torch.no_grad()?
+        During training, PyTorch tracks all operations to compute gradients.
+        During inference we do not need gradients — disabling them saves memory
+        and speeds up computation.
+
+    WHY .cpu().numpy()?
+        PyTorch tensors may live on GPU. sklearn metrics require numpy arrays
+        on CPU. We move them with .cpu() then convert with .numpy().
+
+    Parameters
+    ----------
+    model  : nn.Module   trained model  (must be in eval() mode)
+    loader : DataLoader  (typically the test DataLoader)
+    device : str         "cuda" or "cpu"
+
+    Returns
+    -------
+    all_preds  : np.ndarray  shape (N,)  predicted class indices
+    all_labels : np.ndarray  shape (N,)  true class indices
+    """
+
+    model.eval()   # disable Dropout, use BatchNorm running stats
+
+    all_preds  = []
+    all_labels = []
+
+    with torch.no_grad():
+        for images, labels in loader:
+            images = images.to(device)
+
+            # Forward pass — outputs are raw logits (no softmax yet)
+            outputs = model(images)
+
+            # argmax across class dimension → predicted class index
+            preds = outputs.argmax(dim=1)
+
+            # Move to CPU and convert to numpy for sklearn
+            all_preds.append(preds.cpu().numpy())
+            all_labels.append(labels.numpy())   # labels were never on GPU
+
+    return np.concatenate(all_preds), np.concatenate(all_labels)
+
+
+# =============================================================================
+# FUNCTION: evaluate_model
+# =============================================================================
+def evaluate_model(model, loaders, test_labels, class_names,
+                   model_name, dataset_label, config):
+    """
+    Evaluate a trained model on the test set.
+    Prints and saves: accuracy, per-class metrics, confusion matrix.
+
+    Parameters
+    ----------
+    model         : trained PyTorch model
+    loaders       : dict  (needs loaders["test"])
+    test_labels   : np.ndarray  true integer labels for the test set
+    class_names   : list  of class name strings
+    model_name    : str   "ResNet50", "EfficientNetB0", or "MobileNetV2"
+    dataset_label : str   "baseline", "distorted", or "augmented"
+    config        : dict  from config.py
+    """
+
+    print()
+    print("=" * 55)
+    print(f"  EVALUATION : {model_name}  |  {dataset_label}")
+    print("=" * 55)
+
+    device = config["DEVICE"]
+    model  = model.to(device)
+
+    # Get predictions from test DataLoader
+    y_pred, y_true = get_predictions(model, loaders["test"], device)
+
+    # ── Overall accuracy ──────────────────────────────────────────────────
+    acc = accuracy_score(y_true, y_pred)
+    print(f"  Test Accuracy : {acc * 100:.2f}%")
+
+    # ── Per-class metrics (precision, recall, F1) ─────────────────────────
+    report = classification_report(
+        y_true, y_pred,
+        target_names = class_names,
+        digits       = 4,
+    )
+    print()
+    print(report)
+
+    # ── Confusion matrix ──────────────────────────────────────────────────
+    _plot_confusion_matrix(y_true, y_pred, class_names, model_name, dataset_label, config)
+
+    # ── Save results ──────────────────────────────────────────────────────
+    os.makedirs(config["RESULTS_DIR"], exist_ok=True)
+
+    json_path = os.path.join(config["RESULTS_DIR"], f"{model_name}_{dataset_label}_results.json")
+    with open(json_path, "w") as f:
+        json.dump({"model": model_name, "dataset": dataset_label, "accuracy": float(acc)}, f, indent=2)
+
+    txt_path = os.path.join(config["RESULTS_DIR"], f"{model_name}_{dataset_label}_report.txt")
+    with open(txt_path, "w") as f:
+        f.write(f"Model    : {model_name}\nDataset  : {dataset_label}\nAccuracy : {acc*100:.2f}%\n\n")
+        f.write(report)
+
+    print(f"  Saved → {json_path}")
+
+    return {"model": model_name, "dataset": dataset_label, "accuracy": float(acc)}
+
+
+# =============================================================================
+# FUNCTION: _plot_confusion_matrix  (private)
+# =============================================================================
+def _plot_confusion_matrix(y_true, y_pred, class_names, model_name, dataset_label, config):
+    """Normalised confusion matrix heatmap. Diagonal = correct predictions."""
+
+    short = [
+        n.replace("Tomato_","T-").replace("Tomato__","T-")
+         .replace("Potato___","P-").replace("Pepper__bell___","PP-")
+         .replace("_"," ")
+        for n in class_names
+    ]
+
+    cm  = confusion_matrix(y_true, y_pred, normalize="true")
+    fig, ax = plt.subplots(figsize=(14, 12))
+    sns.heatmap(cm, annot=True, fmt=".2f",
+                xticklabels=short, yticklabels=short,
+                cmap="Blues", linewidths=0.4, ax=ax)
+    ax.set_title(f"{model_name}  |  {dataset_label}\nNormalised Confusion Matrix",
+                 fontsize=13, fontweight="bold")
+    ax.set_xlabel("Predicted", fontsize=11)
+    ax.set_ylabel("True",      fontsize=11)
+    plt.xticks(rotation=45, ha="right", fontsize=8)
+    plt.yticks(rotation=0,  fontsize=8)
+    plt.tight_layout()
+
+    path = os.path.join(config["RESULTS_DIR"], f"cm_{model_name}_{dataset_label}.png")
+    plt.savefig(path, dpi=150)
+    plt.close()
+    print(f"  Confusion matrix → {path}")
+
+
+# =============================================================================
+# FUNCTION: plot_training_curves
+# =============================================================================
+def plot_training_curves(model_name, dataset_label, config):
+    """Load saved history JSON and plot accuracy + loss curves."""
+
+    path = os.path.join(config["RESULTS_DIR"], f"{model_name}_{dataset_label}_history.json")
+    if not os.path.exists(path):
+        print(f"  History not found: {path}")
+        return
+
+    with open(path) as f:
+        h = json.load(f)
+
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+    fig.suptitle(f"Training Curves — {model_name}  ({dataset_label})",
+                 fontsize=13, fontweight="bold")
+
+    axes[0].plot(h["train_acc"], label="Train", color="skyblue")
+    axes[0].plot(h["val_acc"],   label="Val",   color="orange", linestyle="--")
+    axes[0].set_title("Accuracy"); axes[0].set_xlabel("Epoch")
+    axes[0].legend(); axes[0].grid(True, alpha=0.3)
+
+    axes[1].plot(h["train_loss"], label="Train", color="skyblue")
+    axes[1].plot(h["val_loss"],   label="Val",   color="orange", linestyle="--")
+    axes[1].set_title("Loss"); axes[1].set_xlabel("Epoch")
+    axes[1].legend(); axes[1].grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    out = os.path.join(config["RESULTS_DIR"], f"curve_{model_name}_{dataset_label}.png")
+    plt.savefig(out, dpi=150); plt.close()
+    print(f"  Training curve  → {out}")
+
+
+# =============================================================================
+# FUNCTION: compute_gaps
+# =============================================================================
+def compute_gaps(results_dir):
+    """
+    Compute Robustness Gap and Augmentation Gap for each model.
+
+    ROBUSTNESS GAP  = accuracy(baseline on clean) - accuracy(baseline on droplet)
+                      How much accuracy drops when leaves are wet.
+
+    AUGMENTATION GAP = accuracy(augmented on droplet) - accuracy(baseline on droplet)
+                       How much combined training recovers that drop.
+    """
+
+    print()
+    print("=" * 65)
+    print("  ROBUSTNESS GAP & AUGMENTATION GAP  (Key Dissertation Metrics)")
+    print("=" * 65)
+    print()
+
+    models = ["ResNet50", "EfficientNetB0", "MobileNetV2"]
+    gaps   = {}
+
+    print(f"  {'Model':<18}  {'Rob. Gap':>10}  {'Aug. Gap':>12}")
+    print("  " + "-" * 45)
+
+    for m in models:
+        cross_path = os.path.join(results_dir, f"{m}_cross_test.json")
+        if not os.path.exists(cross_path):
+            print(f"  {m:<18}  — run compare_results.py first")
+            continue
+
+        with open(cross_path) as f:
+            cross = json.load(f)
+
+        a_base_clean = cross.get("baseline_on_clean", 0)
+        a_base_drop  = cross.get("baseline_on_droplet", 0)
+        a_aug_drop   = cross.get("augmented_on_droplet", 0)
+
+        rob_gap = a_base_clean - a_base_drop
+        aug_gap = a_aug_drop   - a_base_drop
+
+        gaps[m] = {
+            "baseline_on_clean"   : a_base_clean,
+            "baseline_on_droplet" : a_base_drop,
+            "augmented_on_droplet": a_aug_drop,
+            "robustness_gap"      : rob_gap,
+            "augmentation_gap"    : aug_gap,
+        }
+
+        print(f"  {m:<18}  {rob_gap*100:>+9.2f}%  {aug_gap*100:>+11.2f}%")
+
+    print()
+    print("  Robustness Gap  : accuracy drop on droplet images (smaller = better)")
+    print("  Augmentation Gap: recovery from augmented training (larger = better)")
+    print()
+
+    return gaps
+
+
+# =============================================================================
+# FUNCTION: compare_all_models
+# =============================================================================
+def compare_all_models(config):
+    """Grouped bar chart — all 3 models × all 3 settings."""
+
+    models   = ["ResNet50", "EfficientNetB0", "MobileNetV2"]
+    settings = ["baseline", "distorted", "augmented"]
+    colours  = {"baseline": "skyblue", "distorted": "lightcoral", "augmented": "lightgreen"}
+
+    data = {}
+    for m in models:
+        data[m] = {}
+        for s in settings:
+            p = os.path.join(config["RESULTS_DIR"], f"{m}_{s}_results.json")
+            data[m][s] = json.load(open(p))["accuracy"] * 100 if os.path.exists(p) else 0.0
+
+    x     = np.arange(len(models))
+    width = 0.25
+
+    fig, ax = plt.subplots(figsize=(13, 6))
+    for i, s in enumerate(settings):
+        vals = [data[m][s] for m in models]
+        bars = ax.bar(x + i*width, vals, width, label=s.capitalize(),
+                      color=colours[s], edgecolor="black", linewidth=0.7)
+        for bar, v in zip(bars, vals):
+            ax.text(bar.get_x()+bar.get_width()/2, bar.get_height()+0.4,
+                    f"{v:.1f}%", ha="center", fontsize=8, fontweight="bold")
+
+    ax.set_xticks(x + width)
+    ax.set_xticklabels(models, fontsize=11)
+    ax.set_ylim(0, 115)
+    ax.set_ylabel("Test Accuracy (%)", fontsize=12)
+    ax.set_title(
+        "Model Accuracy — All 3 Experimental Settings\n"
+        "Baseline (Clean)  |  Distorted (Droplet)  |  Augmented (Clean+Droplet)",
+        fontsize=12, fontweight="bold"
+    )
+    ax.axhline(y=90, color="gray", linestyle="--", alpha=0.5, label="90% target")
+    ax.legend(fontsize=10)
+    ax.grid(axis="y", alpha=0.3)
+    plt.tight_layout()
+
+    out = os.path.join(config["RESULTS_DIR"], "final_comparison.png")
+    plt.savefig(out, dpi=150); plt.close()
+    print(f"  Final comparison chart → {out}")
