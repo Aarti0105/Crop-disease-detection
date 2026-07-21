@@ -1,11 +1,23 @@
-# All Project Settings  #Stores every project configuration in one place.
-# ============================================================
+
+
+# Configuration file
+
+#------------------------------------------------------------------------------------------------------------------
+
+# Section 1 - Import Libraries
 
 import os
 import torch
 
+#-------------------------------------------------------------------------------------------------------------------
+
+# Section 2 - Define Path
+
 BASE_PATH = "/Users/manish/Documents/Semister 2/7. Project/Aarti Data Droplet"
 
+#-------------------------------------------------------------------------------------------------------------------
+
+# Section 3 - Define Device
 
 # Auto detect device
 if torch.backends.mps.is_available():
@@ -15,9 +27,11 @@ elif torch.cuda.is_available():
 else:
     DEVICE = torch.device("cpu")
 
-CFG = {
+#-------------------------------------------------------------------------------------------------------------------
 
-    # Paths
+# Section 4 - Define Configuration Dictionary
+
+CFG = {
     "CLEAN_IMAGES" : os.path.join(BASE_PATH, "images.npy"),
     "CLEAN_LABELS" : os.path.join(BASE_PATH, "labels.npy"),
     "DROP_IMAGES" : os.path.join(BASE_PATH, "droplet_images.npy"),
@@ -46,7 +60,6 @@ CFG = {
     # Training
     #   - Adam optimizer with lr=0.0001
     #   - Standard CrossEntropyLoss
-    #   - No phases, simple loop
     "LR"           : 0.0001,
     "WEIGHT_DECAY" : 0.0001,
     "EPOCHS"       : 20,
@@ -54,3 +67,5 @@ CFG = {
     "SETTINGS"     : ["baseline", "distorted", "distorted1", "augmented"],
     "MAX_CLASS_WEIGHT" : 3.0,
 }
+
+#-----------------------------------------------------------------------------------------------------------------

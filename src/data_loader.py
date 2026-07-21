@@ -1,6 +1,10 @@
-# Load and Prepare Data
-# ============================================================
 
+
+# Load and Prepare Data
+
+#------------------------------------------------------------------------------------------------------------------
+
+#Section 1 - Import Libraries
 
 import numpy as np
 from sklearn.preprocessing import LabelEncoder
@@ -9,12 +13,11 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 
+#-------------------------------------------------------------------------------------------------------------------
+
+# Section 2 - Define LeafDataset Class
 
 class LeafDataset(Dataset):
-    """
-    PyTorch DataLoader calls __len__ and __getitem__ to build batches.
-    """
-
     def __init__(self, images, labels, transform=None):
         self.images = images
         self.labels = labels
@@ -31,7 +34,10 @@ class LeafDataset(Dataset):
             image = self.transform(image)
 
         return image, torch.tensor(label, dtype=torch.long)
+    
+#---------------------------------------------------------------------------------------------------------------------
 
+# Section 3 - Define Data Transforms
 
 def get_transforms(cfg):
     mean = cfg["IMG_MEAN"]
@@ -42,23 +48,21 @@ def get_transforms(cfg):
         transforms.Resize((224, 224)),
         transforms.RandomHorizontalFlip(p=0.5),
         transforms.RandomRotation(15),
-        transforms.ColorJitter(
-            brightness=0.2,
-            contrast=0.2
-        ),
+        transforms.ColorJitter(brightness=0.2,contrast=0.2),
         transforms.ToTensor(),
         transforms.Normalize(mean=mean, std=std),
     ])
-
     val_transform = transforms.Compose([
         transforms.ToPILImage(),
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
         transforms.Normalize(mean=mean, std=std),
     ])
-
     return train_transform, val_transform
 
+#---------------------------------------------------------------------------------------------------------------------
+
+# Section 4 - Prepare Data Function
 
 def prepare_data(images_path, labels_path, cfg):
     """
@@ -124,3 +128,5 @@ def prepare_data(images_path, labels_path, cfg):
         ),
     }
     return loaders, y_test, class_names, encoder
+
+#---------------------------------------------------------------------------------------------------------------------

@@ -1,5 +1,10 @@
+
+
 # Train the Model
-# ============================================================
+
+#---------------------------------------------------------------------------------------------------------------------
+
+# Section 1 - Import Libraries
 
 import os
 import json
@@ -11,20 +16,23 @@ import torch.optim as optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from sklearn.utils.class_weight import compute_class_weight
 
+#---------------------------------------------------------------------------------------------------------------------
+
+# Section 2 - Define EarlyStopping Class
 
 class EarlyStopping:
     """Stop training when val accuracy stops improving. Save best weights."""
 
     def __init__(self, patience):
-        self.patience   = patience
-        self.counter    = 0
-        self.best_acc   = 0.0
+        self.patience = patience
+        self.counter = 0
+        self.best_acc = 0.0
         self.best_state = None
 
     def check(self, val_acc, model):
         if val_acc > self.best_acc:
-            self.best_acc   = val_acc
-            self.counter    = 0
+            self.best_acc = val_acc
+            self.counter = 0
             self.best_state = copy.deepcopy(model.state_dict())
             return False
         self.counter += 1
@@ -33,8 +41,11 @@ class EarlyStopping:
     def restore_best(self, model):
         if self.best_state:
             model.load_state_dict(self.best_state)
-            print(f"  Best weights restored  (val_acc = {self.best_acc:.4f})")
+            print(f" Best weights restored  (val_acc = {self.best_acc:.4f})")
 
+#---------------------------------------------------------------------------------------------------------------------
+
+# Section 3 - Define Training Function
 
 def get_weighted_loss(loaders, cfg, device):
     """
@@ -52,7 +63,7 @@ def get_weighted_loss(loaders, cfg, device):
     """
     train_labels = loaders["train"].dataset.labels
     present = np.unique(train_labels)
-    weights      = compute_class_weight(
+    weights = compute_class_weight(
         class_weight = "balanced",
         classes = np.arange(cfg["NUM_CLASSES"]),
         y = train_labels,
@@ -69,11 +80,14 @@ def get_weighted_loss(loaders, cfg, device):
 
     return nn.CrossEntropyLoss(weight=weight_tensor)
 
+#---------------------------------------------------------------------------------------------------------------------
+
+# Section 4 - Train Model Function
 
 def train_model(bundle, loaders, setting_name, cfg):
-    model      = bundle["model"]
+    model = bundle["model"]
     model_name = bundle["name"]
-    device     = cfg["DEVICE"]
+    device = cfg["DEVICE"]
 
     # Weighted loss — fixes Potato___healthy and Tomato_mosaic_virus
     criterion = get_weighted_loss(loaders, cfg, device)
@@ -96,12 +110,10 @@ def train_model(bundle, loaders, setting_name, cfg):
     save_path = os.path.join(cfg["MODELS_DIR"], f"{model_name}_{setting_name}_best.pth")
 
     early_stop = EarlyStopping(patience=cfg["PATIENCE"])
-    history    = {"train_acc": [], "val_acc": [],
-                  "train_loss": [], "val_loss": []}
-    best_val   = 0.0
+    history = {"train_acc": [], "val_acc": [], "train_loss": [], "val_loss": []}
+    best_val = 0.0
 
     for epoch in range(1, cfg["EPOCHS"] + 1):
-
         # Training phase 
         model.train()
         running_loss = 0
@@ -112,14 +124,14 @@ def train_model(bundle, loaders, setting_name, cfg):
             images, labels = images.to(device), labels.to(device)
             optimizer.zero_grad()                             #Gradients
             outputs = model(images)                           #Forward pass
-            loss    = criterion(outputs, labels)
+            loss = criterion(outputs, labels)
             loss.backward()                                 #Compute gradients
             optimizer.step()                                #Update weights
 
             running_loss += loss.item()
-            _, predicted  = torch.max(outputs, 1)
-            total        += labels.size(0)
-            correct      += (predicted == labels).sum().item()
+            _, predicted = torch.max(outputs, 1)
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
 
         avg_train_loss = running_loss / len(loaders["train"])
         train_accuracy = 100 * correct / total
@@ -132,12 +144,12 @@ def train_model(bundle, loaders, setting_name, cfg):
 
         with torch.no_grad():
             for images, labels in loaders["val"]:
-                images, labels  = images.to(device), labels.to(device)
-                outputs         = model(images)
-                val_loss_sum   += criterion(outputs, labels).item()
-                _, predicted    = torch.max(outputs, 1)
-                total          += labels.size(0)
-                correct        += (predicted == labels).sum().item()
+                images, labels = images.to(device), labels.to(device)
+                outputs = model(images)
+                val_loss_sum += criterion(outputs, labels).item()
+                _, predicted = torch.max(outputs, 1)
+                total += labels.size(0)
+                correct += (predicted == labels).sum().item()
 
         val_accuracy = 100 * correct / total
         avg_val_loss = val_loss_sum / len(loaders["val"])
@@ -178,3 +190,5 @@ def train_model(bundle, loaders, setting_name, cfg):
 
     print(f"\n  Best Validation Accuracy : {best_val:.2f}%")
     return model, history
+
+#---------------------------------------------------------------------------------------------------------------------
