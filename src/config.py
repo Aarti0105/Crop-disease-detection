@@ -22,6 +22,8 @@ CFG = {
     "CLEAN_LABELS" : os.path.join(BASE_PATH, "labels.npy"),
     "DROP_IMAGES" : os.path.join(BASE_PATH, "droplet_images.npy"),
     "DROP_LABELS" : os.path.join(BASE_PATH, "droplet_labels.npy"),
+    "DROP_IMAGES_1"  : os.path.join(BASE_PATH, "droplet_images_1.npy"),
+    "DROP_LABELS_1"  : os.path.join(BASE_PATH, "droplet_labels_1.npy"),
     "MODELS_DIR" : os.path.join(BASE_PATH, "models"),
     "RESULTS_DIR" : os.path.join(BASE_PATH, "results"),
 
@@ -39,7 +41,7 @@ CFG = {
     "IMG_STD" : [0.229, 0.224, 0.225],
 
     # Models
-    "MODELS" : ["MobileNetV2", "EfficientNetB0", "ResNet50"],
+    "MODELS" : ["MobileNetV2"],
 
     # Training
     #   - Adam optimizer with lr=0.0001
@@ -49,6 +51,6 @@ CFG = {
     "WEIGHT_DECAY" : 0.0001,
     "EPOCHS"       : 20,
     "PATIENCE"     : 5,
-    "SETTINGS"     : ["baseline", "distorted", "augmented"],
+    "SETTINGS"     : ["baseline", "distorted", "distorted1", "augmented"],
     "MAX_CLASS_WEIGHT" : 3.0,
 }

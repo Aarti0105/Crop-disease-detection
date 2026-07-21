@@ -39,6 +39,7 @@ class EarlyStopping:
 def get_weighted_loss(loaders, cfg, device):
     """
     Build CrossEntropyLoss with class weights.
+    it tells the model to pay more attention to minority classes, which are often ignored.
 
     Minority classes get higher weight so the model cannot ignore them.
     Weight is capped at MAX_CLASS_WEIGHT (3.0) to keep training stable.
@@ -50,11 +51,17 @@ def get_weighted_loss(loaders, cfg, device):
         weight difference causes 10x smaller spikes — completely stable.
     """
     train_labels = loaders["train"].dataset.labels
+    present = np.unique(train_labels)
     weights      = compute_class_weight(
         class_weight = "balanced",
         classes = np.arange(cfg["NUM_CLASSES"]),
         y = train_labels,
     )
+
+    # Build full weight array — missing classes get weight 1.0
+    all_weights = np.ones(cfg["NUM_CLASSES"])
+    for cls, w in zip(present, weights):
+        all_weights[cls] = w
 
     # Cap extreme weights
     weights = np.clip(weights, 0, cfg["MAX_CLASS_WEIGHT"])
@@ -79,17 +86,14 @@ def train_model(bundle, loaders, setting_name, cfg):
         weight_decay = cfg["WEIGHT_DECAY"],
     )
 
-    # Halve LR when val accuracy stops improving for 3 epochs
+    # Reduce LR by half when val accuracy stops improving for 3 epochs
     scheduler = ReduceLROnPlateau(
         optimizer, mode="max", factor=0.5,
         patience=3, min_lr=1e-8,
     )
 
     os.makedirs(cfg["MODELS_DIR"], exist_ok=True)
-    save_path = os.path.join(
-        cfg["MODELS_DIR"],
-        f"{model_name}_{setting_name}_best.pth"
-    )
+    save_path = os.path.join(cfg["MODELS_DIR"], f"{model_name}_{setting_name}_best.pth")
 
     early_stop = EarlyStopping(patience=cfg["PATIENCE"])
     history    = {"train_acc": [], "val_acc": [],
@@ -106,11 +110,11 @@ def train_model(bundle, loaders, setting_name, cfg):
 
         for images, labels in loaders["train"]:
             images, labels = images.to(device), labels.to(device)
-            optimizer.zero_grad()
-            outputs = model(images)
+            optimizer.zero_grad()                             #Gradients
+            outputs = model(images)                           #Forward pass
             loss    = criterion(outputs, labels)
-            loss.backward()
-            optimizer.step()
+            loss.backward()                                 #Compute gradients
+            optimizer.step()                                #Update weights
 
             running_loss += loss.item()
             _, predicted  = torch.max(outputs, 1)
@@ -156,7 +160,6 @@ def train_model(bundle, loaders, setting_name, cfg):
             f"Train Loss: {avg_train_loss:.4f}  "
             f"Train Acc: {train_accuracy:.2f}%  "
             f"Val Acc: {val_accuracy:.2f}%  "
-            f"lr={lr:.2e}"
         )
         print(f"  {'-'*75}")
 
