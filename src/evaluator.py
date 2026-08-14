@@ -148,7 +148,7 @@ def show_confusion(y_pred, y_true, class_names):
     ]
 
     for x,y,label,value,color in boxes:
-        rect = plt.Rectangle((x,y),1,1, acecolor=color, edgecolor="black", linewidth=2)
+        rect = plt.Rectangle((x,y),1,1, facecolor=color, edgecolor="black", linewidth=2)
         ax.add_patch(rect)
         ax.text(x+0.5,y+0.60,label, ha="center", va="center", fontsize=13, fontweight="bold")
         ax.text(x+0.5,y+0.30,f"{value:,}", ha="center", va="center", fontsize=15)
