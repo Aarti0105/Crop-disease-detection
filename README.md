@@ -2,7 +2,7 @@
 
 **Author:** Aarti Bandgar  
 **Institution:** University of Galway, Ireland  
-**Programme:** MSc Computer Science — Data Analytics  
+**Programme:** MSc Computer Science - Data Analytics  
 
 ---
 
