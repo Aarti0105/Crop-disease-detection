@@ -55,11 +55,11 @@ def get_weighted_loss(loaders, cfg, device):
     Minority classes get higher weight so the model cannot ignore them.
     Weight is capped at MAX_CLASS_WEIGHT (3.0) to keep training stable.
 
-    WHY SAFE NOW AT LR=0.0001:
+    LR=0.0001:
         Class weighting caused oscillation before at LR=0.001 because
         large weights created huge gradient spikes with a high LR.
         At LR=0.0001 each update step is 10x smaller, so the same
-        weight difference causes 10x smaller spikes — completely stable.
+        weight difference causes 10x smaller spikes.
     """
     train_labels = loaders["train"].dataset.labels
     present = np.unique(train_labels)
@@ -89,7 +89,7 @@ def train_model(bundle, loaders, setting_name, cfg):
     model_name = bundle["name"]
     device = cfg["DEVICE"]
 
-    # Weighted loss — fixes Potato___healthy and Tomato_mosaic_virus
+    # Weighted loss — fixes Potato_healthy and Tomato_mosaic_virus
     criterion = get_weighted_loss(loaders, cfg, device)
     print()
 
