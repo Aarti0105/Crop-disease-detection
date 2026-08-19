@@ -110,11 +110,3 @@ BASE_PATH = "/your/path/to/project"
 - PyTorch 2.x, torchvision, scikit-learn, OpenCV, matplotlib
 
 ---
-
-## References
-
-- Mohanty et al. (2016) — Using deep learning for image-based plant disease detection
-- Sandler et al. (2018) — MobileNetV2
-- Tan and Le (2019) — EfficientNet
-- Ma et al. (2018) — ShuffleNetV2
-- Selvaraju et al. (2017) — Grad-CAM
