@@ -49,20 +49,12 @@ Crop-disease-detection/
 │   ├── model_builder.py          # Builds MobileNetV2, EfficientNetB0, ShuffleNetV2 with pretrained ImageNet weights
 │   ├── trainer.py                # Training loop with Adam optimizer, early stopping, weighted loss, ReduceLROnPlateau
 │   ├── evaluator.py              # Evaluation functions — accuracy, precision, recall, F1, confusion matrix, Grad-CAM
-│   └── gradcam.py                # Grad-CAM visualisation — shows which parts of the leaf the model focused on
 │
 ├── notebooks/                    # Jupyter notebooks — run these in order
 │   ├── 01_Dataset.ipynb          # Load PlantVillage images from folder and save as images.npy and labels.npy
 │   ├── 02_Synthetic_Droplet_Generation.ipynb   # Apply water droplet augmentation to clean images, save as droplet_images.npy
 │   ├── 03_Training.ipynb         # Train all 3 models under Baseline and Distorted settings (6 training runs total)
 │   └── 04_Evaluation.ipynb       # Evaluate all models — accuracy, metrics, confusion matrix, cross-dataset test, Grad-CAM
-│
-├── Images/                       # Figures used in the paper
-│   ├── pipeline_architecture.png # Combined pipeline and architecture diagram for all 3 models
-│   ├── accuracy_curve_*.png      # Training and validation accuracy curves per model per setting
-│   ├── loss_curve_*.png          # Training and validation loss curves per model per setting
-│   ├── confusion_matrix_*.png    # TP/FP/FN/TN confusion matrix figures per model per setting
-│   └── gradcam_*.png             # Grad-CAM heatmap visualisations
 │
 └── README.md                     # This file
 ```
