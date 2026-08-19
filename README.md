@@ -101,7 +101,6 @@ BASE_PATH = "/your/path/to/project"
 | `model_builder.py` | Loads pretrained models and replaces the final layer for 38-class classification |
 | `trainer.py` | Runs the training loop — weighted loss, Adam, early stopping, learning rate scheduling |
 | `evaluator.py` | Computes all evaluation metrics and produces confusion matrix and comparison tables |
-| `gradcam.py` | Generates Grad-CAM heatmaps to visually verify what the model is attending to |
 
 ---
 
