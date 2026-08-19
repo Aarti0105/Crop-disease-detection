@@ -27,7 +27,7 @@ A **cross-dataset robustness test** is then run where each clean-trained (Baseli
 | EfficientNetB0 | 99.77% | 99.55% | −40.75% |
 | ShuffleNetV2 | 99.61% | 99.12% | −31.67% |
 
-> The drop column shows what happens when a clean-trained model is tested on wet leaf images it has never seen — this is the core finding of this project.
+> The drop column shows what happens when a clean-trained model is tested on wet leaf images it has never seen; this is the core finding of this project.
 
 ---
 
