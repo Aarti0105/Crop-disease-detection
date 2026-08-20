@@ -1,25 +1,25 @@
 
 
-# Configuration file
+#Configuration file
 
 #------------------------------------------------------------------------------------------------------------------
 
-# Section 1 - Import Libraries
+#Section 1 - Import Libraries
 
 import os
 import torch
 
 #-------------------------------------------------------------------------------------------------------------------
 
-# Section 2 - Define Path
+#Section 2 - Define Path
 
 BASE_PATH = "/Users/manish/Documents/Semister 2/7. Project/Aarti Data Droplet"
 
 #-------------------------------------------------------------------------------------------------------------------
 
-# Section 3 - Define Device
+#Section 3 - Define Device
 
-# Auto detect device
+#Auto detect device
 if torch.backends.mps.is_available():
     DEVICE = torch.device("mps")
 elif torch.cuda.is_available():
@@ -29,7 +29,7 @@ else:
 
 #-------------------------------------------------------------------------------------------------------------------
 
-# Section 4 - Define Configuration Dictionary
+#Section 4 - Define Configuration Dictionary
 
 CFG = {
     "CLEAN_IMAGES" : os.path.join(BASE_PATH, "images.npy"),
@@ -39,10 +39,10 @@ CFG = {
     "MODELS_DIR" : os.path.join(BASE_PATH, "models"),
     "RESULTS_DIR" : os.path.join(BASE_PATH, "results"),
 
-    # Device
+    #Device
     "DEVICE" : DEVICE,
 
-    # Dataset
+    #Dataset
     "NUM_CLASSES" : 38,
     "BATCH_SIZE" : 64,
     "NUM_WORKERS" : 0,
@@ -52,17 +52,17 @@ CFG = {
     "IMG_MEAN" : [0.485, 0.456, 0.406],
     "IMG_STD" : [0.229, 0.224, 0.225],
 
-    # Models
+    #Models
     "MODELS" : ["MobileNetV2", "EfficientNetB0", "ShuffleNetV2"],
 
-    # Training
-    #   - Adam optimizer with lr=0.0001
-    #   - Standard CrossEntropyLoss
-    "LR"           : 0.0001,
+    #Training
+    # - Adam optimizer with lr=0.0001
+    # - Standard CrossEntropyLoss
+    "LR" : 0.0001,
     "WEIGHT_DECAY" : 0.0001,
-    "EPOCHS"       : 20,
-    "PATIENCE"     : 5,
-    "SETTINGS"     : ["baseline", "distorted"],
+    "EPOCHS" : 20,
+    "PATIENCE" : 5,
+    "SETTINGS" : ["baseline", "distorted"],
     "MAX_CLASS_WEIGHT" : 3.0,
 }
 

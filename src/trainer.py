@@ -1,10 +1,10 @@
 
 
-# Train the Model
+#Train the Model
 
 #---------------------------------------------------------------------------------------------------------------------
 
-# Section 1 - Import Libraries
+#Section 1 - Import Libraries
 
 import os
 import json
@@ -18,10 +18,10 @@ from sklearn.utils.class_weight import compute_class_weight
 
 #---------------------------------------------------------------------------------------------------------------------
 
-# Section 2 - Define EarlyStopping Class
+#Section 2 - Define EarlyStopping Class
 
 class EarlyStopping:
-    """Stop training when val accuracy stops improving. Save best weights."""
+    #Stop training when val accuracy stops improving. Save best weights.
 
     def __init__(self, patience):
         self.patience = patience
@@ -45,22 +45,10 @@ class EarlyStopping:
 
 #---------------------------------------------------------------------------------------------------------------------
 
-# Section 3 - Define Training Function
+#Section 3 - Define Training Function
 
 def get_weighted_loss(loaders, cfg, device):
-    """
-    Build CrossEntropyLoss with class weights.
-    it tells the model to pay more attention to minority classes, which are often ignored.
-
-    Minority classes get higher weight so the model cannot ignore them.
-    Weight is capped at MAX_CLASS_WEIGHT (3.0) to keep training stable.
-
-    LR=0.0001:
-        Class weighting caused oscillation before at LR=0.001 because
-        large weights created huge gradient spikes with a high LR.
-        At LR=0.0001 each update step is 10x smaller, so the same
-        weight difference causes 10x smaller spikes.
-    """
+   
     train_labels = loaders["train"].dataset.labels
     present = np.unique(train_labels)
     weights = compute_class_weight(
@@ -69,12 +57,12 @@ def get_weighted_loss(loaders, cfg, device):
         y = train_labels,
     )
 
-    # Build full weight array — missing classes get weight 1.0
+    #Build full weight array — missing classes get weight 1.0
     all_weights = np.ones(cfg["NUM_CLASSES"])
     for cls, w in zip(present, weights):
         all_weights[cls] = w
 
-    # Cap extreme weights
+    #Cap extreme weights
     weights = np.clip(weights, 0, cfg["MAX_CLASS_WEIGHT"])
     weight_tensor = torch.tensor(weights, dtype=torch.float32).to(device)
 
@@ -82,25 +70,25 @@ def get_weighted_loss(loaders, cfg, device):
 
 #---------------------------------------------------------------------------------------------------------------------
 
-# Section 4 - Train Model Function
+#Section 4 - Train Model Function
 
 def train_model(bundle, loaders, setting_name, cfg):
     model = bundle["model"]
     model_name = bundle["name"]
     device = cfg["DEVICE"]
 
-    # Weighted loss — fixes Potato_healthy and Tomato_mosaic_virus
+    #Weighted loss — fixes Potato_healthy and Tomato_mosaic_virus
     criterion = get_weighted_loss(loaders, cfg, device)
     print()
 
-    # Adam optimizer — 
+    #Adam optimizer — 
     optimizer = optim.Adam(
         model.parameters(),
         lr = cfg["LR"],           # 0.0001
         weight_decay = cfg["WEIGHT_DECAY"],
     )
 
-    # Reduce LR by half when val accuracy stops improving for 3 epochs
+    #Reduce LR by half when val accuracy stops improving for 3 epochs
     scheduler = ReduceLROnPlateau(
         optimizer, mode="max", factor=0.5,
         patience=3, min_lr=1e-8,
@@ -114,7 +102,7 @@ def train_model(bundle, loaders, setting_name, cfg):
     best_val = 0.0
 
     for epoch in range(1, cfg["EPOCHS"] + 1):
-        # Training phase 
+        #Training phase 
         model.train()
         running_loss = 0
         correct = 0
@@ -136,7 +124,7 @@ def train_model(bundle, loaders, setting_name, cfg):
         avg_train_loss = running_loss / len(loaders["train"])
         train_accuracy = 100 * correct / total
 
-        # Validation phase
+        #Validation phase
         model.eval()
         correct = 0
         total = 0
@@ -156,7 +144,7 @@ def train_model(bundle, loaders, setting_name, cfg):
 
         scheduler.step(val_accuracy)
 
-        # Record
+        #Record
         history["train_acc"].append(round(train_accuracy / 100, 4))
         history["val_acc"].append(round(val_accuracy / 100, 4))
         history["train_loss"].append(round(avg_train_loss, 4))

@@ -1,6 +1,6 @@
 
 
-# Load and Prepare Data
+#Load and Prepare Data
 
 #------------------------------------------------------------------------------------------------------------------
 
@@ -15,7 +15,7 @@ from torchvision import transforms
 
 #-------------------------------------------------------------------------------------------------------------------
 
-# Section 2 - Define LeafDataset Class
+#Section 2 - Define LeafDataset Class
 
 class LeafDataset(Dataset):
     def __init__(self, images, labels, transform=None):
@@ -37,7 +37,7 @@ class LeafDataset(Dataset):
     
 #---------------------------------------------------------------------------------------------------------------------
 
-# Section 3 - Define Data Transforms
+#Section 3 - Define Data Transforms
 
 def get_transforms(cfg):
     mean = cfg["IMG_MEAN"]
@@ -62,32 +62,24 @@ def get_transforms(cfg):
 
 #---------------------------------------------------------------------------------------------------------------------
 
-# Section 4 - Prepare Data Function
+#Section 4 - Prepare Data Function
 
 def prepare_data(images_path, labels_path, cfg):
-    """
-    Load data and return DataLoaders.
-
-    Returns
-    -------
-    loaders      : dict — "train", "val", "test" DataLoaders
-    test_labels  : integer labels for test set (for sklearn metrics)
-    class_names  : list of 38 disease class names
-    encoder      : LabelEncoder
-    """
+    
+#Load data and return DataLoaders.
 
     images = np.load(images_path)
     labels = np.load(labels_path, allow_pickle=True)
     print(f"  {images.shape[0]:,} images  |  {len(np.unique(labels))} classes")
 
-    # Convert string class names to integers
+    #Convert string class names to integers
     encoder = LabelEncoder()
     labels_int = encoder.fit_transform(labels)
     class_names = list(encoder.classes_)
 
     unique, counts = np.unique(labels_int, return_counts=True)
 
-    # 80% train+val, 20% test
+    #80% train+val, 20% test
     X_tv, X_test, y_tv, y_test = train_test_split(
         images, labels_int,
         test_size=cfg["TEST_SIZE"],
@@ -95,7 +87,7 @@ def prepare_data(images_path, labels_path, cfg):
         stratify=labels_int,
     )
 
-    # 80% train, 20% val from remaining
+    #80% train, 20% val from remaining
     X_train, X_val, y_train, y_val = train_test_split(
         X_tv, y_tv,
         test_size=cfg["VAL_SIZE"],
