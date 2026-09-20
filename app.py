@@ -279,19 +279,23 @@ if page == "🏠 Overview":
     paper_path = "Aarti_capstone_report.pdf"
     if os.path.exists(paper_path):
         with open(paper_path, "rb") as f:
-            base64_pdf = __import__('base64').b64encode(f.read()).decode('utf-8')
+            pdf_bytes = f.read()
+        
+        import base64
+        base64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
+        
         pdf_display = f'''
-            <iframe
+            <embed
                 src="data:application/pdf;base64,{base64_pdf}"
                 width="100%"
                 height="800px"
                 type="application/pdf"
-            >
-            </iframe>
+            />
         '''
         st.markdown(pdf_display, unsafe_allow_html=True)
     else:
         st.info("Paper PDF not found — add paper.pdf to the repo root.")
+    
     
     st.divider()
     st.subheader("Pipeline Overview")
