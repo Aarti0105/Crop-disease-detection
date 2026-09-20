@@ -274,6 +274,22 @@ if page == "🏠 Overview":
     )
 
     st.divider()
+
+    # Paper download
+    paper_path = "Aarti_capstone_report.pdf"
+    if os.path.exists(paper_path):
+        with open(paper_path, "rb") as f:
+            pdf_bytes = f.read()
+        st.download_button(
+            label="📄 Download Research Paper (PDF)",
+            data=pdf_bytes,
+            file_name="Crop_Disease_Detection_Aarti_Bandgar.pdf",
+            mime="application/pdf",
+        )
+    else:
+        st.info("Paper PDF not found — add paper.pdf to the repo root.")
+    
+    st.divider()
     st.subheader("Pipeline Overview")
     steps = [
         ("1️⃣", "PlantVillage Dataset", "54,305 colour images · 38 disease classes"),
