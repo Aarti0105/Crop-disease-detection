@@ -276,25 +276,13 @@ if page == "🏠 Overview":
     st.divider()
     st.subheader("📄 Research Paper")
     
-    paper_path = "Aarti_capstone_report.pdf"
-    if os.path.exists(paper_path):
-        with open(paper_path, "rb") as f:
-            pdf_bytes = f.read()
-        
-        import base64
-        base64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
-        
-        pdf_display = f'''
-            <embed
-                src="data:application/pdf;base64,{base64_pdf}"
-                width="100%"
-                height="800px"
-                type="application/pdf"
-            />
-        '''
-        st.markdown(pdf_display, unsafe_allow_html=True)
-    else:
-        st.info("Paper PDF not found — add paper.pdf to the repo root.")
+    file_id = "1AH-7EoHHLUifV3BQfwvZuISVAwnQ2ivz"
+    pdf_url  = f"https://drive.google.com/file/d/1AH-7EoHHLUifV3BQfwvZuISVAwnQ2ivz/view?usp=drivesdk"
+    
+    st.markdown(
+        f'<iframe src="{pdf_url}" width="100%" height="800px"></iframe>',
+        unsafe_allow_html=True,
+    )
     
     
     st.divider()
