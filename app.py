@@ -211,7 +211,7 @@ with st.sidebar:
 # ──────────────────────────────────────────────────────────────────────
 if page == "🏠 Overview":
 
-    st.title("🌿 Crop Disease Detection Under Water Droplet Distortions")
+    st.title("🌿 Crop Disease Detection Under Realistic Environmental Distortions Using Synthetic Water Droplet Augmentation")
     st.markdown(
         "**MSc Capstone Project** · Aarti Bandgar · University of Galway · 2026"
     )
