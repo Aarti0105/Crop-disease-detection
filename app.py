@@ -274,18 +274,6 @@ if page == "🏠 Overview":
     )
 
     st.divider()
-    st.subheader("📄 Research Paper")
-    
-    file_id = "1AH-7EoHHLUifV3BQfwvZuISVAwnQ2ivz"
-    pdf_url  = f"https://drive.google.com/file/d/1AH-7EoHHLUifV3BQfwvZuISVAwnQ2ivz/preview"
-    
-    st.markdown(
-        f'<iframe src="{pdf_url}" width="100%" height="800px"></iframe>',
-        unsafe_allow_html=True,
-    )
-    
-    
-    st.divider()
     st.subheader("Pipeline Overview")
     steps = [
         ("1️⃣", "PlantVillage Dataset", "54,305 colour images · 38 disease classes"),
@@ -300,6 +288,20 @@ if page == "🏠 Overview":
             st.markdown(f"### {icon}")
             st.markdown(f"**{title}**")
             st.caption(desc)
+
+    st.divider()
+    st.subheader("📄 Research Paper")
+    
+    file_id = "1AH-7EoHHLUifV3BQfwvZuISVAwnQ2ivz"
+    pdf_url  = f"https://drive.google.com/file/d/1AH-7EoHHLUifV3BQfwvZuISVAwnQ2ivz/preview"
+    
+    st.markdown(
+        f'<iframe src="{pdf_url}" width="100%" height="800px"></iframe>',
+        unsafe_allow_html=True,
+    )
+    
+    
+    
 
 # ──────────────────────────────────────────────────────────────────────
 # PAGE: PREDICT
