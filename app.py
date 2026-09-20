@@ -277,7 +277,7 @@ if page == "🏠 Overview":
     st.subheader("📄 Research Paper")
     
     file_id = "1AH-7EoHHLUifV3BQfwvZuISVAwnQ2ivz"
-    pdf_url  = f"https://drive.google.com/file/d/1AH-7EoHHLUifV3BQfwvZuISVAwnQ2ivz/view?usp=drivesdk"
+    pdf_url  = f"https://drive.google.com/file/d/1AH-7EoHHLUifV3BQfwvZuISVAwnQ2ivz/preview"
     
     st.markdown(
         f'<iframe src="{pdf_url}" width="100%" height="800px"></iframe>',
