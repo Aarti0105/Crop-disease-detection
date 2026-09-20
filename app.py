@@ -396,7 +396,7 @@ elif page == "🔍 Predict":
 
                             gc_col1, gc_col2, gc_col3 = st.columns(3)
                             with gc_col1:
-                                st.image(image_np, caption="Original", use_column_width=True)
+                                st.image(image_np, caption="Original", use_container_width=True)
                             with gc_col2:
                                 hm_color = cv2.applyColorMap(
                                     np.uint8(255 * heatmap), cv2.COLORMAP_JET
@@ -407,7 +407,7 @@ elif page == "🔍 Predict":
                                     use_container_width=True,
                                 )
                             with gc_col3:
-                                st.image(overlay, caption="Overlay", use_column_width=True)
+                                st.image(overlay, caption="Overlay", use_container_width=True)
 
                             st.caption(
                                 "🔴 Red/yellow = model focused here strongly  "
