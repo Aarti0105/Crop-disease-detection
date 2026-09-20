@@ -335,7 +335,7 @@ elif page == "🔍 Predict":
             st.image(
                 "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Cat03.jpg/1200px-Cat03.jpg",
                 caption="Upload a leaf photo — tomato, potato, apple, pepper, etc.",
-                use_column_width=True,
+                use_container_width=True,
             ) if False else None
         else:
             image = Image.open(uploaded).convert("RGB")
@@ -366,7 +366,7 @@ elif page == "🔍 Predict":
                     st.image(
                         image_np,
                         caption="Input image (224×224)",
-                        use_column_width=True,
+                        use_container_width=True,
                     )
 
                 with col_res:
@@ -404,7 +404,7 @@ elif page == "🔍 Predict":
                                 st.image(
                                     cv2.cvtColor(hm_color, cv2.COLOR_BGR2RGB),
                                     caption="Heatmap (red = high attention)",
-                                    use_column_width=True,
+                                    use_container_width=True,
                                 )
                             with gc_col3:
                                 st.image(overlay, caption="Overlay", use_column_width=True)
