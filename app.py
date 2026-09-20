@@ -274,18 +274,22 @@ if page == "🏠 Overview":
     )
 
     st.divider()
-
-    # Paper download
+    st.subheader("📄 Research Paper")
+    
     paper_path = "Aarti_capstone_report.pdf"
     if os.path.exists(paper_path):
         with open(paper_path, "rb") as f:
-            pdf_bytes = f.read()
-        st.download_button(
-            label="📄 Download Research Paper (PDF)",
-            data=pdf_bytes,
-            file_name="Crop_Disease_Detection_Aarti_Bandgar.pdf",
-            mime="application/pdf",
-        )
+            base64_pdf = __import__('base64').b64encode(f.read()).decode('utf-8')
+        pdf_display = f'''
+            <iframe
+                src="data:application/pdf;base64,{base64_pdf}"
+                width="100%"
+                height="800px"
+                type="application/pdf"
+            >
+            </iframe>
+        '''
+        st.markdown(pdf_display, unsafe_allow_html=True)
     else:
         st.info("Paper PDF not found — add paper.pdf to the repo root.")
     
