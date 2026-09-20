@@ -110,3 +110,19 @@ BASE_PATH = "/your/path/to/project"
 - PyTorch 2.x, torchvision, scikit-learn, OpenCV, matplotlib
 
 ---
+
+
+
+## Running the Streamlit App
+
+```bash
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+The app has three pages:
+- **Overview** — project summary and key findings
+- **Predict** — upload a leaf image and get disease prediction with Grad-CAM
+- **Results Dashboard** — all experimental results and comparison tables
+
+Trained model files (.pth) should be placed in the `models/` folder.
